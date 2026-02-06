@@ -25,6 +25,18 @@ def find_key(dictionary,value):
         if val == value:
             return(key)
     return None
+# Reading excel file
+def excel_read(file_name,sheet_name):
+    data_df = []
+    workbook = load_workbook(filename=f"{file_name}.xlsx")
+    sheet = workbook[sheet_name]
+    headers = [cell.value for cell in sheet[1]]
+    for row in sheet.iter_rows(min_row=2, values_only=True):
+        rowdf_dict = dict(zip(headers, row))
+        data_df.append(rowdf_dict)
+    workbook.close()
+    #row_df_ret = [data_df,headers]
+    return data_df
 
 def parent_dept_selection(event): 
     global df2,emp_dict,nick_name_dict
@@ -38,16 +50,9 @@ def parent_dept_selection(event):
     emp_list = list(emp_dict.values())
     emp_code.config(values=emp_list)
 def emp_code_selection(event):
-    #global data_tt,emp_dict,nick_name_dict
-    #data_tt["faculty_code"] = emp_code.get()
-    #x_val = find_key(emp_dict,int(data_tt["faculty_code"]))
-    #my_data_tt["my_name"] = nick_name_dict[x_val]
-    #print(int(emp_code.get()),nick_name_dict[x_val])
     assign_dept_code.set('')
     assign_dept_code.config(values=("CE","ME","EE"))
 def dept_option_selection(event):
-    #data_tt["class_dept"] = assign_dept_code.get()
-    #my_data_tt["my_class"] = data_tt["class_dept"] 
     odd_even_code.config(values=("ODD","EVEN"))
 def odd_even_selection(event):
     global odd_even
@@ -94,9 +99,6 @@ def ltp_option_selection(event):
             del lab_dict[i]
             del proj_dict[i]
             del class_count_dict[i]
-# Read the faculty assignment data for the selected odd/even semester
-
-# Read the selected subject codes from the time table to avoid duplicate entry
     df3 = pd.read_excel(f"timeTable_{my_data_tt['my_class']}.xlsx",sheet_name=my_data_tt["my_sem"])
     df3["ID3"] = df3.index
     weekday_dict = dic3_fun("ID3","week_day")
@@ -106,9 +108,6 @@ def ltp_option_selection(event):
     slot4_dict = dic3_fun("ID3","slot_4")
     slot5_dict = dic3_fun("ID3","slot_5")
     slot6_dict = dic3_fun("ID3","slot_6")
-    #print(df3.week_day)
-    #class_x=ltp_code.get()
-    #print(class_x)
     code_lst = list(code_dict.values())
     code_ref_lst = []
     class_count_lst = list(class_count_dict.values())
@@ -129,36 +128,28 @@ def ltp_option_selection(event):
                 L_consumed = check_tt_space(code_ref_lst[j])
                 if (L_count-L_consumed) > 0:
                     code_lst.append(code_ref_lst[j])
-        # avoid other staff already committed lecture
-            data_df5 = []
-            wb5 = load_workbook(filename=f"faculty_assignment_{odd_even_code.get()}.xlsx")
-            sheet = wb5[assign_dept_code.get()]
-            headers = [cell.value for cell in sheet[1]]
-            for row in sheet.iter_rows(min_row=2, values_only=True):
-                rowdf5_dict = dict(zip(headers, row))
-                data_df5.append(rowdf5_dict)
-            wb5.close()
-            data_df21 = []
-            wb21 = load_workbook("faculty_data.xlsx")
-            sheet = wb21[dept_code.get()]
-            headers = [cell.value for cell in sheet[1]]
-            for row in sheet.iter_rows(min_row=2, values_only=True):
-                rowdf2_dict = dict(zip(headers, row))
-                data_df21.append(rowdf2_dict)
-            wb21.close()
-            wb21_empcode_index = next(i for i, item in enumerate(data_df21) if item["emp_code"] == int(emp_code.get()))
-            print(data_df21[wb21_empcode_index]["nick_name"])
+                       
+        #avoid other staff already committed lecture
+            data_assigned = excel_read(f"faculty_assignment_{odd_even_code.get()}",assign_dept_code.get())           
+            print(data_assigned)
+            data_faculty = excel_read("faculty_data",dept_code.get())
+            for i in range(len(data_assigned)):
+                print(data_assigned[i]["nick_name"])
             """
-            # for i in range(len(data_df5)):
-            #    print(data_df5[i]["nick_name"])
-            for j in range(len(code_lst)):
-                for i in range(len(data_df21)):
-                    if data_df21[i]["sub_code"] == sub_code.get() and data_df21[i]["nick_name"] == code_lst[j]:
-                        code_lst.remove(code_lst[j])
-                        break
+            print(code_lst)
+            print(emp_code.get())
+            print(len(code_lst))
+            #@@@@@@@@@@@@@@@
             """
-#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
+            new_code_lst = []
+            for i in range(len(code_lst)):
+                my_name = nick_name_dict[list(emp_dict.values()).index(int(emp_code.get()))]
+                if data_assigned[i]["nick_name"] == 0 or data_assigned[i]["nick_name"] == my_name:
+                    new_code_lst.append(code_lst[i])
+                    #print(data_assigned[i]["nick_name"],nick_name_dict[list(emp_dict.values()).index(int(emp_code.get()))])
+            code_lst = new_code_lst
+            print(code_lst)
+            #faculty_assigned_row = next(i for i, item in enumerate(data_faculty) if item["emp_code"] == int(emp_code.get()))   
         case "Tutorial":
             tut_lst = list(tut_dict.values())
             for i in range(len(tut_lst)):
@@ -377,6 +368,17 @@ def update_tt():
                 sheet.cell(row=row_val[i]+2,column=col_val[i]+2,value=sub_code.get())
     workbook.save(filename=f"timeTable_{assign_dept_code.get()}.xlsx")
     workbook.close()
+    #@@@@@@@@@@@@@@@
+    workbook = load_workbook(filename=f"faculty_assignment_{odd_even_code.get()}.xlsx")
+    sheet = workbook[assign_dept_code.get()]
+    match ltp_code.get():
+        case "Lecture":
+            for i in range(len(row_val)):
+                my_name = nick_name_dict[list(emp_dict.values()).index(int(emp_code.get()))]
+                sheet.cell(row=row_val[i]+2,column=col_val[i]+2,value=my_name)
+    workbook.save(filename=f"faculty_assignment_{odd_even_code.get()}.xlsx")
+    workbook.close()
+    #@@@@@@@@@@@@@@@
     text_box2.delete('1.0','end')
     text_box2.insert('1.0',f"Timetable updated for {assign_dept_code.get()} : {semester_code.get()} :  Lecture {sub_code.get()}")
     TimeTable(root,f"timeTable_{assign_dept_code.get()}.xlsx",semester_code.get())
