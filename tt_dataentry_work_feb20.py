@@ -168,8 +168,8 @@ def ltp_option_selection(event):
                 code_lst = df_curi_tut.Code.tolist()
                 print(df_curi_tut)
             else:
-                df_sel_tut = df_sel[["nick_name","deptT_class","semT","T_code"]].copy()
-                df_sel_tut.dropna(subset=['nick_name'],inplace=True) # remove rows with empty nick_name
+                #df_sel_tut = df_sel[["nick_name","deptT_class","semT","T_code"]].copy()
+                #df_sel_tut.dropna(subset=['nick_name'],inplace=True) # remove rows with empty nick_name
                 print("do the job")
                 T_count = []
                 print(df_curi_tut.Code.tolist())
@@ -181,6 +181,18 @@ def ltp_option_selection(event):
                     else:
                         T_need = 3
                     T_count.append(T_need)
+                df_sel_tut = df_sel[["nick_name","deptT_class","semT","T_code"]].copy()
+                df_sel_tut.dropna(subset=['nick_name'],inplace=True) # remove rows with empty nick_name
+                print(len(df_sel_tut))
+                
+                return
+                code_lst_temp=df_curi_tut.Code.tolist()
+                print(code_lst_temp)
+                T_code_lst = common_lst(df_sel_tut,"T_code","T_code")
+                print(T_code_lst)
+                for i in range(len(T_code_lst)): 
+                    if assign_dept_code.get() == common_lst(df_sel_tut,"T_code","deptT_class")[i] and semester_code.get() == common_lst(df_sel_tut,"T_code","semT")[i]:
+                        code_lst_temp.remove(T_code_lst[i])
                 print(T_count)
 
 
