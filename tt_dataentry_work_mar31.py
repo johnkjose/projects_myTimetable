@@ -51,30 +51,66 @@ def common_lst(df_ref,lstname_ref,lstname_sub):
             unifrom_ref_list.append(comn_ref_lst[i])
             unifrom_sub_list.append(comn_sub_lst[i])                 
     return(unifrom_sub_list)
-    """
-def excel_read1(file_name,sheet_name):
-    data_dfrow = []
-    lst_dfcol = []
-    workbook = load_workbook(filename=f"{file_name}.xlsx")
-    sheet = workbook[sheet_name]
-    headers = [cell.value for cell in sheet[1]]
-    for row in sheet.iter_rows(min_row=2, values_only=True):
-        rowdf_dict = dict(zip(headers, row))
-        data_dfrow.append(rowdf_dict)
-    for column in sheet.iter_cols(min_row=2, values_only=True):
-        df_col = []
-        for cell in column:
-            df_col.append(cell)
-        lst_dfcol.append(df_col)
-        coldf_dict = dict(zip(headers, lst_dfcol))
-    workbook.close()
-    row_df_ret = [data_dfrow,coldf_dict,headers]
-    return row_df_ret
-def excel_writerows(file_name,sheet_name,data_header,data_column):
-    workbook = load_workbook(filename=f"{file_name}.xlsx")
-    sheet = workbook[sheet_name]
-    print(sheet.title)
-    return
+
+def comn_lst(df_ref,lstname_ref,lstname_sub,lst_dept,lst_sem): 
+    comn_ref_lst = []
+    comn_sub_lst = []
+    comn_dept_lst = []
+    comn_sem_lst = []
+    #print(df_ref)
+    if df_ref.empty:
+        return(comn_sub_lst)
+    else:
+        #print(len(df_ref))
+        for i in range(len(df_ref)):
+            comn_ref_lst.extend(df_ref.at[df_ref.index.tolist()[i],lstname_ref].split(","))
+            comn_sub_lst.extend(df_ref.at[df_ref.index.tolist()[i],str(lstname_sub)].split(","))
+            comn_dept_lst.extend(df_ref.at[df_ref.index.tolist()[i],lst_dept].split(","))
+            comn_sem_lst.extend(df_ref.at[df_ref.index.tolist()[i],lst_sem].split(","))
+            """
+            if len(comn_ref_lst) == 1:
+                #comn_sub_lst.extend(df_ref.at[df_ref.index.tolist()[i],str(lstname_sub)])
+                comn_dept_lst.extend(df_ref.at[df_ref.index.tolist()[i],lst_dept])
+                comn_sem_lst.extend(df_ref.at[df_ref.index.tolist()[i],lst_sem])        
+            else:
+                comn_ref_lst.extend(df_ref.at[df_ref.index.tolist()[i],lstname_ref].split(","))
+                comn_sub_lst.extend(df_ref.at[df_ref.index.tolist()[i],str(lstname_sub)].split(","))
+                comn_dept_lst.extend(df_ref.at[df_ref.index.tolist()[i],lst_dept].split(","))
+                comn_sem_lst.extend(df_ref.at[df_ref.index.tolist()[i],lst_sem].split(","))
+            """               
+        #print(comn_sub_lst,comn_dept_lst,comn_sem_lst)
+        unifrom_ref_list = []
+        unifrom_sub_list = []
+        for i in range(len(comn_ref_lst)):
+            if comn_ref_lst[i] not in unifrom_ref_list:
+                if assign_dept_code.get() == comn_dept_lst[i] and semester_code.get() == comn_sem_lst[i]:
+                    unifrom_sub_list.append(comn_sub_lst[i])                 
+        return(unifrom_sub_list)
+"""
+def comn_lst(df_ref,lstname_ref,lstname_sub,lst_dept,lst_sem): 
+    comn_ref_lst = []
+    comn_sub_lst = []
+    comn_dept_lst = []
+    comn_sem_lst = []
+    #print(df_ref.at[df_ref.index.tolist(),lstname_ref].split(","))
+    print(df_ref)
+    if df_ref.empty:
+        return(comn_sub_lst)
+    else:
+        print("I am not empty")
+        return
+    for i in range(len(df_ref)):
+        comn_ref_lst.extend(df_ref.at[df_ref.index.tolist()[i],lstname_ref].split(","))
+        comn_sub_lst.extend(df_ref.at[df_ref.index.tolist()[i],str(lstname_sub)].split(","))
+        comn_dept_lst.extend(df_ref.at[df_ref.index.tolist()[i],lst_dept].split(","))
+        comn_sem_lst.extend(df_ref.at[df_ref.index.tolist()[i],lst_sem].split(","))
+    unifrom_ref_list = []
+    unifrom_sub_list = []
+    for i in range(len(comn_ref_lst)):
+        if comn_ref_lst[i] not in unifrom_ref_list:
+            if assign_dept_code.get() == comn_dept_lst[i] and semester_code.get() == comn_sem_lst[i]:
+                unifrom_sub_list.append(comn_sub_lst[i])                 
+    return(unifrom_sub_list)
 """
 def parent_dept_selection(event):
     global df_dept
@@ -85,6 +121,7 @@ def parent_dept_selection(event):
     text_box1.delete('1.0','end')
     text_box1.insert('1.0',f"ENTER / REFRESH your employee code")
 def emp_code_selection(event):
+    #cancel_button.config(state='disabled')
     assign_dept_code.set('')
     assign_dept_code.config(values=("CE","ME","EE"))
     text_box1.delete('1.0','end')
@@ -112,6 +149,8 @@ def semester_option_selection(event):
     sub_code.config(values=(''))
     text_box1.delete('1.0','end')
     text_box1.insert('1.0',f"ENTER / REFRESH assigned class type")   
+def get_code_lst():
+    pass
 def ltp_option_selection(event):
     global faculty_name,df_sel,df_curi_active,code_lst_lab,code_lst_tut
     action_code.set('')
@@ -123,33 +162,97 @@ def ltp_option_selection(event):
     match ltp_code.get():
         case "Lecture":
             df_curi_lec = df_curi_active[df_curi_active["L"] != 0] 
-            df_sel_lec = df_sel[["nick_name","deptL_class","semL","L_code"]].copy()         
-            print(df_sel_lec)
+            code_lst_temp = df_curi_lec.Code.tolist()
+            df_sel_lec = df_sel[["nick_name","deptL_class","semL","L_code","L_class","L_hr"]].copy()
+            df_sel_lec.dropna(subset=['nick_name'],inplace=True) # remove rows with empty nick_name
             if df_sel_lec.empty:
                 code_lst = df_curi_lec.Code.tolist()
             else:
-                df_sel_lec = df_sel[["nick_name","deptL_class","semL","L_code"]].copy()
-                df_sel_lec.dropna(subset=['nick_name'],inplace=True) # remove rows with empty nick_name
+                #print(len(df_sel_lec))
+                for i in range(len(df_sel_lec)):
+                    if df_sel_lec.iloc[[i]].empty:
+                        code_lst = df_curi_lec.Code.tolist()
+                    else: 
+                        df_sel_lec.iloc[[i]]
+                        #print(df_sel_lec.iloc[[i]])
+                        #print(df_sel_lec.at[df_sel_lec.index.tolist()[i],"L_code"].split(","))
+                        my_code_temp = df_sel_lec.at[df_sel_lec.index.tolist()[i],"L_code"].split(",")
+                        if len(my_code_temp)==1:                
+                            #print(my_code_temp[0])
+                            if my_code_temp[0] in df_curi_lec.Code.tolist():
+                                class_lst_me = df_sel_lec.at[df_sel_lec.index.tolist()[i],"L_class"]
+                                hr_lst_me = df_sel_lec.at[df_sel_lec.index.tolist()[i],"L_hr"]
+                                #print(class_lst_me,hr_lst_me)
+                                if hr_lst_me == class_lst_me:
+                                    code_lst_temp.remove(my_code_temp[0])
+                        else:
+                            for j in range(len(my_code_temp)):
+                                #print(my_code_temp[j])
+                                if my_code_temp[j] in df_curi_lec.Code.tolist():
+                                    class_lst_me = df_sel_lec.at[df_sel_lec.index.tolist()[i],"L_class"].split(",")
+                                    hr_lst_me = df_sel_lec.at[df_sel_lec.index.tolist()[i],"L_hr"].split(",")
+                                    #print(class_lst_me[j],hr_lst_me[j])
+                                    if hr_lst_me[j] == class_lst_me[j]:
+                                        code_lst_temp.remove(my_code_temp[j])
                 if faculty_name in df_sel_lec.nick_name.tolist():
-                    df_sel_lec=df_sel_lec[df_sel_lec["nick_name"]!=faculty_name]
-                    code_lst_temp=df_curi_lec.Code.tolist()
-                    for i in range(len(common_lst(df_sel_lec,"L_code","L_code"))):    
-                        if assign_dept_code.get() == common_lst(df_sel_lec,"L_code","deptL_class")[i] and semester_code.get() == common_lst(df_sel_lec,"L_code","semL")[i]:
-                            code_lst_temp.remove(common_lst(df_sel_lec,"L_code","L_code")[i])
+                    df_sel_nomelec=df_sel_lec[df_sel_lec["nick_name"]!=faculty_name]
+                    #print(df_sel_nomelec) 
+                    #print(len(df_sel_nomelec))
+                    for i in range(len(df_sel_nomelec)):
+                        #print(df_sel_nomelec.iloc[[i]])
+                        if df_sel_nomelec.iloc[[i]].empty:
+                            code_lst = df_curi_lec.Code.tolist()
+                        else:
+                            df_sel_nomelec.iloc[[i]]
+                            #print(df_sel_nomelec.iloc[[i]])
+                            #print(df_sel_nomelec.at[df_sel_nomelec.index.tolist()[i],"L_code"].split(","))
+                            my_code_temp = df_sel_nomelec.at[df_sel_nomelec.index.tolist()[i],"L_code"].split(",")
+                            if len(my_code_temp)==1:
+                                #print(my_code_temp[0])
+                                if my_code_temp[0] in code_lst_temp:
+                                    dept_lst_me = df_sel_nomelec.at[df_sel_nomelec.index.tolist()[i],"deptL_class"]
+                                    sem_lst_me = df_sel_nomelec.at[df_sel_nomelec.index.tolist()[i],"semL"]
+                                    #print(dept_lst_me,sem_lst_me)
+                                    if assign_dept_code.get() == dept_lst_me and semester_code.get() == sem_lst_me:
+                                        code_lst_temp.remove(my_code_temp[0]) 
+                            else:
+                                for j in range(len(my_code_temp)):
+                                    #print(my_code_temp[j])
+                                    if my_code_temp[j] in code_lst_temp:
+                                        dept_lst_me = df_sel_nomelec.at[df_sel_nomelec.index.tolist()[i],"deptL_class"].split(",")
+                                        sem_lst_me = df_sel_nomelec.at[df_sel_nomelec.index.tolist()[i],"semL"].split(",")
+                                        #print(dept_lst_me[j],sem_lst_me[j])
+                                        if assign_dept_code.get() == dept_lst_me[j] and semester_code.get() == sem_lst_me[j]:
+                                            code_lst_temp.remove(my_code_temp[j])  
+                    code_lst = code_lst_temp
                 else:
-                    code_lst_temp=df_curi_lec.Code.tolist()
-                    for i in range(len(common_lst(df_sel_lec,"L_code","L_code"))): 
-                        if assign_dept_code.get() == common_lst(df_sel_lec,"L_code","deptL_class")[i] and semester_code.get() == common_lst(df_sel_lec,"L_code","semL")[i]:
-                            code_lst_temp.remove(common_lst(df_sel_lec,"L_code","L_code")[i])
-                df_sel_mylec = df_sel[["nick_name","L_code","L_class","L_hr"]].copy()
-                df_sel_mylec.dropna(subset=['nick_name'],inplace=True) # remove rows with empty nick_name
-                if faculty_name in df_sel_mylec.nick_name.tolist():
-                    df_sel_mylec=df_sel_mylec[df_sel_mylec["nick_name"]==faculty_name]
-                    for i in range(len(common_lst(df_sel_mylec,"L_code","L_code"))):
-                        if common_lst(df_sel_mylec,"L_code","L_class")[i] == common_lst(df_sel_mylec,"L_code","L_hr")[i]:
-                            code_lst_temp.remove(common_lst(df_sel_mylec,"L_code","L_code")[i])
-                code_lst=code_lst_temp    
-                print(code_lst)
+                    #print(len(df_sel_lec))
+                    for i in range(len(df_sel_lec)):
+                        if df_sel_lec.iloc[[i]].empty:
+                            code_lst = df_curi_lec.Code.tolist()
+                        else: 
+                            df_sel_lec.iloc[[i]]
+                            #print(df_sel_lec.iloc[[i]])
+                            #print(df_sel_lec.at[df_sel_lec.index.tolist()[i],"L_code"].split(","))
+                            my_code_temp = df_sel_lec.at[df_sel_lec.index.tolist()[i],"L_code"].split(",")
+                            if len(my_code_temp)==1:
+                                #print(my_code_temp[0])
+                                if my_code_temp[0] in code_lst_temp:
+                                    dept_lst_me = df_sel_lec.at[df_sel_lec.index.tolist()[i],"deptL_class"]
+                                    sem_lst_me = df_sel_lec.at[df_sel_lec.index.tolist()[i],"semL"]
+                                    #print(dept_lst_me,sem_lst_me)
+                                    if assign_dept_code.get() == dept_lst_me and semester_code.get() == sem_lst_me:
+                                        code_lst_temp.remove(my_code_temp[0])
+                            else:
+                                for j in range(len(my_code_temp)):
+                                    #print(my_code_temp[j])
+                                    if my_code_temp[j] in code_lst_temp:
+                                        dept_lst_me = df_sel_lec.at[df_sel_lec.index.tolist()[i],"deptL_class"].split(",")
+                                        sem_lst_me = df_sel_lec.at[df_sel_lec.index.tolist()[i],"semL"].split(",")
+                                        #print(dept_lst_me[j],sem_lst_me[j])
+                                        if assign_dept_code.get() == dept_lst_me[j] and semester_code.get() == sem_lst_me[j]:
+                                            code_lst_temp.remove(my_code_temp[j])
+                        code_lst = code_lst_temp
         case "Tutorial":
             df_curi_tut = df_curi_active[df_curi_active["T"] != 0]
             df_sel_tut = df_sel[["nick_name","deptT_class","semT","T_code","T_hr"]].copy()
@@ -261,6 +364,22 @@ def reset_lf1_lf2():
     sub_code.set('')
     action_code.config(values=(''))
     action_code.set('')
+def disable_lf1_lf2():
+    dept_emp_code.config(state="disabled")
+    assign_dept_code.config(state="disabled")
+    odd_even_code.config(state="disabled")
+    semester_code.config(state="disabled")
+    ltp_code.config(state="disabled")
+    sub_code.config(state="disabled")
+    action_code.config(state="disabled")
+def activate_lf1_lf2():
+    dept_emp_code.config(state="readonly")
+    assign_dept_code.config(state="readonly")
+    odd_even_code.config(state="readonly")
+    semester_code.config(state="readonly")
+    ltp_code.config(state="readonly")
+    sub_code.config(state="readonly")
+    action_code.config(state="readonly")   
 def reset_lf3():
     cb1.config(state='disabled')
     cb2.config(state='disabled')
@@ -279,9 +398,9 @@ def reset_lf3():
 def week_click(week_value:any):
     global code_lst_lab,code_lst_tut,faculty_name
     df_tt = pd.read_excel(f"timeTable_{assign_dept_code.get()}.xlsx",sheet_name=semester_code.get(),engine="openpyxl")
-    reset_lf3()
     match ltp_code.get():
         case "Lecture":
+            reset_lf3()
             if code_lst_lab == []:
                 if df_tt.at[r3.get(),"slot_1"] == "FREE":
                     cb1.config(state='normal')
@@ -296,7 +415,7 @@ def week_click(week_value:any):
                 if df_tt.at[r3.get(),"slot_6"] == "FREE":
                     cb6.config(state='normal')
                 if df_tt.at[r3.get(),"slot_x"] == "FREE":
-                    cb6.config(state='normal')
+                    cb7.config(state='normal')
             else:
                 print("NOT blank")
                 text_box2.delete('1.0','end')
@@ -358,7 +477,7 @@ def week_click(week_value:any):
                     text_box2.delete('1.0','end')
                     text_box2.insert('1.0',f"!! ENTER !! The choice in Timetable {row_tut}, {col_tut}")
     verify_button.config(bg="white",fg="black")
-def refresh_weekslot():
+def refresh_weekslots():
     global ro_co_lst,df_tt
     ro_co_lst = [sr0.get(),sr1.get(),sr2.get(),sr3.get(),sr4.get(),sr5.get(),sr6.get()]
     if 1 not in ro_co_lst:
@@ -376,48 +495,48 @@ def verify_ok():
     refresh_button.config(bg="white",fg="black")
     text_box2.delete('1.0','end')
     text_box2.insert('1.0',f"Confirm and SAVE to Time Table")
+    cancel_button.config(text="CANCEL",bg="yellow",fg="black")
+    disable_lf1_lf2()
 def update_tt():
     global faculty_name,df_sel,df_curi_active
     global ro_co_lst,df_tt
+    activate_lf1_lf2()
     update_button.config(bg="white",fg="black")
+    cancel_button.config(text="Confirm CANCEL",bg="white",fg="black")
     match ltp_code.get():
         case "Lecture":
-            print("I am at TT and sel")
             df_curi_lec = df_curi_active[df_curi_active["L"] != 0]
-            class_hr_index = df_curi_lec.Code.tolist().index(sub_code.get())
-            lec_class_hr = str(df_curi_lec.L.tolist()[class_hr_index])
+            lec_class_hr = df_curi_lec.L.tolist()[df_curi_lec.Code.tolist().index(sub_code.get())]
             df_sel_lec = df_sel[["nick_name","deptL_class","semL","L_code","L_class","L_hr"]].copy()
             if faculty_name in df_sel_lec.nick_name.tolist():
                 df_sel_mylec = df_sel_lec[df_sel_lec["nick_name"]==faculty_name]
-                index_row = df_sel_lec.nick_name.tolist().index(faculty_name)
-                if sub_code.get() in common_lst(df_sel_lec,"L_code","L_code"):                           #df_sel_mylec,??????????????????????????
-                    index_col = common_lst(df_sel_mylec,"L_code","L_code").index(sub_code.get())
-                    if assign_dept_code.get()==common_lst(df_sel_mylec,"L_code","deptL_class")[index_col] and common_lst(df_sel_mylec,"L_code","semL")[index_col]:   
-                        new_hr_lst = []
-                        for i in range(len(common_lst(df_sel_mylec,"L_code","L_hr"))):
-                            if i == index_col:
-                                new_hr_lst.append(int(common_lst(df_sel_mylec,"L_code","L_hr")[i])+1)
-                            else:
-                                new_hr_lst.append(int(common_lst(df_sel_mylec,"L_code","L_hr")[i]))                              
-                        df_sel.loc[index_row,"L_hr"] = ",".join(str(x) for x in new_hr_lst)
-                        #df_sel.to_excel(f"faculty_assignment_{odd_even_code.get()}.xlsx",dept_code.get(),index=False,engine="openpyxl")
+                #print(df_sel_mylec)
+                mycode_lst = comn_lst(df_sel_mylec,"L_code","L_code","deptL_class","semL")
+                print(mycode_lst)
+                return
+                myhr_lst = comn_lst(df_sel_mylec,"L_code","L_hr","deptL_class","semL")
+                index_row = df_sel_lec[df_sel_lec['nick_name'] == faculty_name].index
+                if sub_code.get() in mycode_lst:
+                    myhr_lst[mycode_lst.index(sub_code.get())] = int(myhr_lst[mycode_lst.index(sub_code.get())]) + 1
+                    df_sel.loc[index_row,"L_hr"] = ",".join(str(x) for x in myhr_lst)
                 else:
-                    df_sel.loc[index_row,"deptL_class"] = f"{df_sel_lec.at[index_row,"deptL_class"]},{assign_dept_code.get()}"
-                    df_sel.loc[index_row,"semL"] = f"{df_sel_lec.at[index_row,"semL"]},{semester_code.get()}"
-                    df_sel.loc[index_row,"L_code"] = f"{df_sel_lec.at[index_row,"L_code"]},{sub_code.get()}"
-                    df_sel.loc[index_row,"L_class"] = f"{df_sel_lec.at[index_row,"L_class"]},{lec_class_hr}"
-                    df_sel.loc[index_row,"L_hr"] = f"{df_sel_lec.at[index_row,"L_hr"]},{1}"
-                    #df_sel.to_excel(f"faculty_assignment_{odd_even_code.get()}.xlsx",dept_code.get(),index=False,engine="openpyxl")                   
+                    code_add_lst = comn_lst(df_sel_mylec,"L_code","L_code","deptL_class","semL")+[sub_code.get()]
+                    df_sel.loc[index_row,"L_code"] = ",".join(x for x in code_add_lst)
+                    dept_add_lst = comn_lst(df_sel_mylec,"L_code","deptL_class","deptL_class","semL")+[assign_dept_code.get()]
+                    df_sel.loc[index_row,"deptL_class"] = ",".join(x for x in dept_add_lst)
+                    sem_add_lst = comn_lst(df_sel_mylec,"L_code","semL","deptL_class","semL")+[semester_code.get()]
+                    df_sel.loc[index_row,"semL"] = ",".join(x for x in sem_add_lst)
+                    class_add_lst = comn_lst(df_sel_mylec,"L_code","L_class","deptL_class","semL")+[lec_class_hr]
+                    df_sel.loc[index_row,"L_class"] = ",".join(str(x) for x in class_add_lst)
+                    hr_add_lst = comn_lst(df_sel_mylec,"L_code","L_class","deptL_class","semL")+[1]
+                    df_sel.loc[index_row,"L_hr"] = ",".join(str(x) for x in hr_add_lst)                             
             else:
                 new_record = pd.DataFrame([{'nick_name':faculty_name,'emp_code':dept_emp_code.get(),'dept_origin':dept_code.get(),
-                    'deptL_class':assign_dept_code.get(),'semL':semester_code.get(),'L_code':sub_code.get(),'L_class':lec_class_hr,"L_hr":1}])
-                df_sel = pd.concat([df_sel,new_record],ignore_index=True)    
+                    'deptL_class':assign_dept_code.get(),'semL':semester_code.get(),'L_code':sub_code.get(),'L_class':lec_class_hr,"L_hr":str(1)}])
+                df_sel = pd.concat([df_sel,new_record],ignore_index=True)   
             df_sel.to_excel(f"faculty_assignment_{odd_even_code.get()}.xlsx",dept_code.get(),index=False,engine="openpyxl")
-            print(f"timeTable_{assign_dept_code.get()}.xlsx",semester_code.get())
             df_tt = pd.read_excel(f"timeTable_{assign_dept_code.get()}.xlsx",semester_code.get(),engine="openpyxl")
-            print(df_tt)
             df_tt.iloc[r3.get(),ro_co_lst.index(1)+1] = f"{faculty_name},{dept_code.get()},{sub_code.get()},(L)"
-            print(df_tt)
             df_tt.to_excel(f"timeTable_{assign_dept_code.get()}.xlsx",semester_code.get(),index=False,engine="openpyxl")
         case "Tutorial":
             #df_curi_tut = df_curi_active[df_curi_active["T"] != 0]
@@ -465,6 +584,7 @@ def update_tt():
                     'deptP_class':assign_dept_code.get(),'semP':semester_code.get(),'P_code':sub_code.get(),"P_hr":1}])
                 df_sel = pd.concat([df_sel,new_record],ignore_index=True)    
                 df_sel.to_excel(f"faculty_assignment_{odd_even_code.get()}.xlsx",dept_code.get(),index=False,engine="openpyxl")  
+    activate_lf1_lf2()
     reset_lf1_lf2()
     reset_lf3()
 def cancel_option_selection(event):
@@ -479,10 +599,8 @@ def lf1_lf2_clear():
     ltp_code.set('')
     sub_code.set('')
     cancel_code.set('')
-
 def common_for_cancel_options():
     pass
-
 def clear_day_slot():
     text_box1.delete('1.0','end')
     text_box2.delete('1.0','end')
@@ -493,7 +611,6 @@ def clear_day_slot():
     sr4.set(0)
     sr5.set(0)
     sr6.set(0)
-
 def cancel_option(event):
     global clear_status
     cancel_entry = cancel_click.get()
@@ -510,8 +627,11 @@ def cancel_option(event):
         common_for_cancel_options()
         text_box1.insert('1.0',"All the data entry under 1)Assigned for Dept./Topic 2)semester 3)Class Type 4)Subject Code will be reset for fresh entry.")
 def confirm_cancel():
-    pass
-
+    update_button.config(bg="white",fg="black")
+    cancel_button.config(text="Confirm CANCEL",bg="white",fg="black")
+    activate_lf1_lf2()
+    reset_lf1_lf2()
+    reset_lf3()
 root=Tk()
 root.title("Data entry by Faculty for TimeTable")
 w_width = root.winfo_screenwidth()
@@ -547,7 +667,6 @@ data_ref = [{'nick_name':'','emp_code':'','dept_origin':'','deptL_class':'','sem
 dept_data = [{'emp_code':'','dept':'','grade':'','nick_name':'','pay_band':''}]
 #Storage file on curiculam
 curi_data = [{'Code':'','Subject':'','Select':'','Number':'','L':'','T':'','P':'','R':''}]
-
 #LBELFRAME lf1
 frame.columnconfigure(0,weight=1) #weight= 1 indicates scale of one
 frame.rowconfigure((0,1,2,3),weight=1)
@@ -641,7 +760,7 @@ week_day=["Monday","Tuesday","Wednesday","Thursday","Friday"]
 for i in range(len(week_day)):
     week=(Radiobutton(lf3,text=week_day[i],variable=r3,value=i,command=lambda:week_click(r3.get())))
     week.grid(row=0,column=i+1,padx=10,pady=2,sticky="nsew")
-refresh_button = Button(lf3,text="REFRESH",command=refresh_weekslot)
+refresh_button = Button(lf3,text="REFRESH",command=refresh_weekslots)
 refresh_button.grid(row=0,column=6,padx=2,pady=2,sticky="nsew")
 #print(week.r3)
 show_msg=Label(lf3,text="-----------Slot 1 to Slot 6 for Lecture & Tutorial and Slot X optional-------------",fg="Blue")
@@ -685,7 +804,6 @@ cancel_code.grid(row=2,column=0,padx=10,pady=2,sticky="nsew")
 cancel_code['values']=("Clear Day & Slot ","Clear All Data","Clear Data from Time Table")
 cancel_code.current()
 cancel_code.bind("<<ComboboxSelected>>",cancel_option_selection)
-
 cancel_button=Button(lf4,text="Confirm CANCEL",bg="white",command=confirm_cancel)
 cancel_button.grid(row=2,column=1,padx=2,pady=2,sticky="nsew")
 verify_data=Label(lf4,text="Verify & Update TimeTable",width=15)
